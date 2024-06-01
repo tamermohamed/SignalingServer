@@ -1,5 +1,5 @@
 const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: 443 }); // Change port from 80 to 8080 for non-root access
+const wss = new WebSocket.Server({ port: 80 }); // Change port from 80 to 8080 for non-root access
 
 const clients = new Map();
 
