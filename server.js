@@ -1,36 +1,36 @@
 const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: 443 });
+const http = require('http');
 
+// Create an HTTP server to handle the WebSocket connections
+const server = http.createServer();
+const wss = new WebSocket.Server({ server });
+
+// Store clients
 const clients = new Map();
 
 wss.on('connection', (ws) => {
     ws.on('message', (message) => {
         const parsedMessage = JSON.parse(message);
         const { type, payload, to } = parsedMessage;
-
+        console.log('started communication');
         switch (type) {
             case 'register':
                 clients.set(payload.clientId, ws);
                 console.log(`Client ${payload.clientId} registered.`);
                 break;
             case 'offer':
-                console.log('offer');
                 sendToClient(to, { type: 'offer', payload: payload.offer });
                 break;
             case 'answer':
-                console.log('answer');
                 sendToClient(to, { type: 'answer', payload: payload.answer });
                 break;
             case 'candidate':
-                console.log('candidate');
                 sendToClient(to, { type: 'candidate', payload: payload.candidate });
                 break;
             case 'reject':
-                console.log('reject');
                 sendToClient(to, { type: 'reject' });
                 break;
             case 'endCall':
-                console.log('end call');
                 sendToClient(to, { type: 'endCall' });
                 break;
             default:
@@ -59,4 +59,8 @@ function sendToClient(clientId, message) {
     }
 }
 
-console.log('Signaling server started');
+// Listen on the port provided by Render.com
+const PORT = 443;
+server.listen(PORT, () => {
+    console.log(`Signaling server started on port ${PORT}`);
+});
