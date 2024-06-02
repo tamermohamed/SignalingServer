@@ -1,10 +1,11 @@
 const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: 80 }); // Change port from 80 to 8080 for non-root access
+const wss = new WebSocket.Server({ port: 443 }); // Change port from 80 to 8080 for non-root access
 
 const clients = new Map();
 
 wss.on('connection', (ws) => {
     ws.on('message', (message) => {
+        console.log(`Client ${clientId} start connect.`);
         let parsedMessage;
         try {
             parsedMessage = JSON.parse(message);
@@ -31,7 +32,7 @@ wss.on('connection', (ws) => {
             case 'endCall':
                 if (to) {
                     sendToClient(to, { type, payload });
-                    console.error(`Call Started: ${to}`);
+                    console.log(`send to client ${clientId}`);
                 } else {
                     console.error(`Invalid 'to' field: ${to}`);
                 }
@@ -70,4 +71,4 @@ function sendToClient(clientId, message) {
     }
 }
 
-console.log('Signaling server started');
+console.log('Signaling server started on port 8080');
