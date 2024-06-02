@@ -12,7 +12,7 @@ wss.on('connection', (ws) => {
     ws.on('message', (message) => {
         const parsedMessage = JSON.parse(message);
         const { type, payload, to } = parsedMessage;
-        console.log('started communication');
+
         switch (type) {
             case 'register':
                 clients.set(payload.clientId, ws);
@@ -60,7 +60,7 @@ function sendToClient(clientId, message) {
 }
 
 // Listen on the port provided by Render.com
-const PORT = 443;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Signaling server started on port ${PORT}`);
 });
