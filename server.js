@@ -1,44 +1,40 @@
 const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: 443 }); // Change port from 80 to 8080 for non-root access
+const wss = new WebSocket.Server({ port: 443 });
 
 const clients = new Map();
 
 wss.on('connection', (ws) => {
     ws.on('message', (message) => {
-        console.log(`Client ${clientId} start connect.`);
-        let parsedMessage;
-        try {
-            parsedMessage = JSON.parse(message);
-        } catch (e) {
-            console.error(`Failed to parse message: ${message}`, e);
-            return;
-        }
-
+        const parsedMessage = JSON.parse(message);
         const { type, payload, to } = parsedMessage;
 
         switch (type) {
             case 'register':
-                if (payload && payload.clientId) {
-                    clients.set(payload.clientId, ws);
-                    console.log(`Client ${payload.clientId} registered.`);
-                } else {
-                    console.error(`Invalid register payload: ${payload}`);
-                }
+                clients.set(payload.clientId, ws);
+                console.log(`Client ${payload.clientId} registered.`);
                 break;
             case 'offer':
+                console.log('offer');
+                sendToClient(to, { type: 'offer', payload: payload.offer });
+                break;
             case 'answer':
+                console.log('answer');
+                sendToClient(to, { type: 'answer', payload: payload.answer });
+                break;
             case 'candidate':
+                console.log('candidate');
+                sendToClient(to, { type: 'candidate', payload: payload.candidate });
+                break;
             case 'reject':
+                console.log('reject');
+                sendToClient(to, { type: 'reject' });
+                break;
             case 'endCall':
-                if (to) {
-                    sendToClient(to, { type, payload });
-                    console.log(`send to client ${clientId}`);
-                } else {
-                    console.error(`Invalid 'to' field: ${to}`);
-                }
+                console.log('end call');
+                sendToClient(to, { type: 'endCall' });
                 break;
             default:
-                console.error(`Unknown message type: ${type}`);
+                console.log(`Unknown message type: ${type}`);
                 break;
         }
     });
@@ -47,28 +43,20 @@ wss.on('connection', (ws) => {
         for (let [clientId, clientWs] of clients) {
             if (clientWs === ws) {
                 clients.delete(clientId);
-                console.log(`Client ${clientId} disconnected.`);
                 break;
             }
         }
-    });
-
-    ws.on('error', (error) => {
-        console.error('WebSocket error:', error);
+        console.log(`Client disconnected.`);
     });
 });
 
 function sendToClient(clientId, message) {
     const clientWs = clients.get(clientId);
-    if (clientWs && clientWs.readyState === WebSocket.OPEN) {
-        try {
-            clientWs.send(JSON.stringify(message));
-        } catch (e) {
-            console.error(`Failed to send message to client ${clientId}:`, e);
-        }
+    if (clientWs) {
+        clientWs.send(JSON.stringify(message));
     } else {
-        console.error(`Client ${clientId} not found or connection is closed.`);
+        console.log(`Client ${clientId} not found.`);
     }
 }
 
-console.log('Signaling server started on port 8080');
+console.log('Signaling server started');
